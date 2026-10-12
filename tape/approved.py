@@ -44,6 +44,12 @@ STREET = [
     (["Run"], "scream",
      "One word. The highest-risk card on the tape: no context survives at "
      "this speed, and some readers will simply believe it.", "high"),
+    (["You have stopped", "walking"], "dread",
+     "Only true of someone who stopped to read it, which is everyone "
+     "who reads it. The tape appears to have noticed.", "med"),
+    (["You have not stopped", "walking"], "curt",
+     "The other half. Catches the ones still moving, who get it "
+     "over their shoulder.", "med"),
     (["Start walking through them"], "curt",
      "An instruction, and deliberately unclear what 'them' is — the crowd, "
      "or what is standing in it. Reads as a dare.", "med"),
@@ -167,6 +173,18 @@ TONIGHT = [
      "Doubt cast on the walk home itself.", "low"),
     (["Have you learnt", "how they hide"], "question",
      "Assumes the reader has been studying. Some will feel caught.", "med"),
+    (["That scream was", "not human"], "dread",
+     "Reclassifies whatever the street just heard. On a loud night "
+     "there is always something to attach it to.", "med"),
+    (["Which eye do they", "see out of"], "question",
+     "Assumes more than two. Worst question on the tape to be asked "
+     "while looking at a mask.", "med"),
+    (["Something got in", "without keys"], "dread",
+     "Past tense and already finished. Nothing to do about it.", "med"),
+    (["Do you know ghouls", "give out candy too"], "curt",
+     "Reframes every door already knocked on tonight.", "low"),
+    (["Even the darkness", "is alive tonight"], "dread",
+     "States the night's condition rather than threatening anyone.", "low"),
     (["Watch the shadows"], "scream",
      "Three words, large. Instruction and warning at once.", "med"),
 ]
@@ -211,6 +229,8 @@ SYSTEM = [
      "Explains the night as policy, which is funnier and colder than magic.", "low"),
     (["MASK DETECTED", "FACE NOT DETECTED"], "glitch",
      "The machine looking at the crowd and failing. Best status card kept.", "med"),
+    (["SUBJECT UNAWARE", "SUBJECT POSSESSED"], "glitch",
+     "Two readings of the same person, filed without comment.", "med"),
     (["WELCOME VISITORS"], "ident",
      "Hospitable, placed among cards that are not. Works as an opener.", "low"),
 ]
@@ -309,14 +329,7 @@ APPROVED = {
 # and these are not mine to guess at — see the questions put to them. Nothing
 # here renders.
 PENDING = [
-    "1/2   walking vs. stopped — two cards or one",
-    "17    THAT SCREAM WAS NOT HUMAN        (transcribed as 'screen')",
-    "18    unclear — possibly WHO LET YOU IN",
-    "21    WHICH EYE DO THEY SEE OUT OF     (transcribed as 'say')",
-    "28    SOMETHING GOT IN WITHOUT KEYS",
-    "38    SUBJECT UNAWARE / SUBJECT POSSESSED",
-    "79b   DO YOU KNOW GHOULS GIVE OUT CANDY TOO   (transcribed as 'goals')",
-    "80    unclear — something about old doors and the possessed",
-    "85    EVEN THE DARKNESS IS ALIVE TONIGHT      (transcribed as 'is the life')",
-    "101   unclear — 'Well sleeping'",
+    "18    'How let you put?!'",
+    "80    'How old doors can be opened by the possessed'",
+    "101   'Well sleeping'",
 ]
