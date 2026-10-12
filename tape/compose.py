@@ -30,7 +30,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import approved  # noqa: E402
-from render import TONES, dwell  # noqa: E402
+from render import TONES, dwell, GRIN_RATE, FACE_RATE  # noqa: E402
 
 # Which hand each reel is set in. The machine keeps the character generator;
 # the dead get a serif so they do not sound like the apparatus; the borrowed
@@ -64,10 +64,16 @@ def card_key(card):
     return card[0][0] if card[0] else "(black)"
 
 
+# Most cuts show nothing between two cards, so only a fraction of each card's
+# flash time is actually spent. Counting all of it overstates the runtime by
+# several minutes across an hour.
+FRAME_SHARE = GRIN_RATE + FACE_RATE
+
+
 def card_seconds(card):
     lines, tone = card[0], card[1]
     hold = BLACK_SECONDS if tone == "black" else dwell(lines, tone)
-    return hold + TONES[tone]["flash"]
+    return hold + TONES[tone]["flash"] * FRAME_SHARE
 
 
 class Reel:
