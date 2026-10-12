@@ -496,6 +496,7 @@ def main():
     ap.add_argument("--clocks", action="store_true",
                     help="include the red seven-segment cards (off by default)")
     ap.add_argument("--block", help="render an approved block from blocks.py")
+    ap.add_argument("--order", help="render a frozen running order from compose.py")
     ap.add_argument("--grin-rate", type=float, default=GRIN_RATE,
                     help="share of cuts that show the grins (default %(default)s)")
     ap.add_argument("--face-rate", type=float, default=FACE_RATE,
@@ -511,7 +512,18 @@ def main():
         shutil.rmtree(work)
     os.makedirs(frames, exist_ok=True)
 
-    if args.block:
+    if args.order:
+        import json
+        with open(args.order) as f:
+            frozen = json.load(f)
+        items = [
+            dict(kind="black" if c["tone"] == "black" else "caption",
+                 lines=c["lines"], tone=c["tone"],
+                 **({"seconds": 4.0} if c["tone"] == "black" else {}))
+            for c in frozen["cards"]
+        ]
+        print(f"frozen order: {len(items)} cards, seed {frozen['seed']}")
+    elif args.block:
         import blocks
         deck = blocks.BLOCKS[args.block]
         items = [
