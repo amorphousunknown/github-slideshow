@@ -6,3 +6,5 @@ _site/
 # tape renderer
 tape/build/
 *.mp4
+__pycache__/
+*.pyc
