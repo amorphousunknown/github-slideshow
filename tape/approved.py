@@ -137,6 +137,17 @@ RETURNED = [
      "Reads two ways and needs neither resolved: sorry you have "
      "forgotten whoever is speaking, or sorry you have forgotten what "
      "happened to you. Echoes the apology above without repeating it.", "low"),
+    (["Dont look at me"], "dread",
+     "Shame rather than threat. The speaker does not want to be seen "
+     "in whatever state it is in.", "low"),
+    (["Im sorry", "the warning came", "too late"], "dread",
+     "An apology for a warning the reader never received, about "
+     "something already done.", "med"),
+    (["I didnt have a better", "way of contacting you"], "curt",
+     "Explains why any of this is on a building at all. Setup.", "low"),
+    (["Thank you for", "your messages"], "dread",
+     "Payoff. Implies the reader has been answering, which they have "
+     "been doing silently all night.", "med"),
     (["One night is not", "very long"], "dread",
      "Closes the reel. Resignation rather than menace.", "low"),
 ]
@@ -210,6 +221,20 @@ TONIGHT = [
      "which.", "low"),
     (["Even the darkness", "is alive tonight"], "dread",
      "States the night's condition rather than threatening anyone.", "low"),
+    (["Something isnt right"], "dread",
+     "Names the feeling the whole tape is building without pointing "
+     "at a cause.", "low"),
+    (["Then the sky blinked"], "dread",
+     "Past tense, enormous, and never explained. Nothing else on the "
+     "tape is this large.", "low"),
+    (["This is the day", "reality resets"], "dread",
+     "Gives the night a mechanism. Reads as folklore rather than threat.", "low"),
+    (["Sleep with", "one eye open"], "curt",
+     "An old saying delivered as instruction.", "med"),
+    (["Dont be afraid", "some people see them", "all the time"], "dread",
+     "Comfort that makes it worse. The reel's best reassurance.", "low"),
+    (["The trees are watching"], "dread",
+     "Works on any street with a tree on it, which is this one.", "low"),
     (["Watch the shadows"], "scream",
      "Three words, large. Instruction and warning at once.", "med"),
 ]
@@ -302,6 +327,14 @@ INSIDE = [
     (["Dont create monsters"], "dread",
      "The only card that warns the reader about themselves. Reads as "
      "advice, a rule, or an accusation depending on who catches it.", "low"),
+    (["Its okay", "its still a secret"], "curt",
+     "Conspiratorial. Assumes a secret the reader does not know they "
+     "are keeping.", "low"),
+    (["You arent dreaming"], "curt",
+     "Setup. Reads as reassurance for exactly as long as it takes to "
+     "read the next card.", "low"),
+    (["You are dreaming"], "dread",
+     "Payoff. The contradiction arrives before the first has settled.", "med"),
     (["(Screaming internally)"], "curt",
      "The joke version of every other card in this reel. Lands as relief, "
      "then as recognition.", "low"),
@@ -359,6 +392,8 @@ APPROVED = {
 # Held back pending the author's wording. The voice transcription was unclear
 # and these are not mine to guess at — see the questions put to them. Nothing
 # here renders.
-# Nothing pending. Every ambiguity from the dictation has been settled by
-# the author.
-PENDING = []
+PENDING = [
+    "'Who are the same way homeless normal or they will get lost' — cannot parse",
+    "'My horror story is Knock at the door' — is the card A KNOCK AT THE DOOR,"
+    " or was this framing rather than a card",
+]
