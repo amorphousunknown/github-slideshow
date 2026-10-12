@@ -133,6 +133,10 @@ RETURNED = [
      "makes the payoff work.", "low"),
     (["Sorry if you are", "finding out you are not"], "dread",
      "The apology is the horror. Best card on the tape.", "med"),
+    (["Sorry if you", "dont remember"], "dread",
+     "Reads two ways and needs neither resolved: sorry you have "
+     "forgotten whoever is speaking, or sorry you have forgotten what "
+     "happened to you. Echoes the apology above without repeating it.", "low"),
     (["One night is not", "very long"], "dread",
      "Closes the reel. Resignation rather than menace.", "low"),
 ]
@@ -204,9 +208,6 @@ TONIGHT = [
     (["Not all doors", "can be opened", "by the possessed"], "dread",
      "Sounds like reassurance. Means some doors can, and does not say "
      "which.", "low"),
-    (["Sleep well"], "curt",
-     "A sign-off. The author's joke is on well — the one in the film with "
-     "the thing climbing out of it — which is why the setup card matters.", "low"),
     (["Even the darkness", "is alive tonight"], "dread",
      "States the night's condition rather than threatening anyone.", "low"),
     (["Watch the shadows"], "scream",
