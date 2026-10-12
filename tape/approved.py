@@ -72,6 +72,9 @@ RETURNED = [
      "Two words doing the work of a paragraph. Answers nothing.", "low"),
     (["Little flying vampires"], "curt",
      "Bats. The lightest card kept — a breath between heavier ones.", "low"),
+    (["Hell was full", "so I came back"], "curt",
+     "The dead returning with swagger rather than sorrow. Sits well "
+     "against the cards that miss someone.", "low"),
 ]
 
 # --------------------------------------------------------------------------
@@ -106,11 +109,58 @@ SYSTEM = [
      "The reverse, and somehow worse. Good directly after the card above.", "low"),
 ]
 
+# --------------------------------------------------------------------------
+# Inside. The tape stops addressing the reader and starts claiming to be them.
+# A page of text is already being read in the reader's own voice, so these are
+# the only cards that are literally true while they are on screen.
+INSIDE = [
+    (["The voice in your head", "knows me"], "dread",
+     "The author's line and the best idea in this reel. True while it is read, "
+     "which is what makes it work.", "med"),
+    (["Are you in control"], "question",
+     "Three words. Opens the whole register without explaining it.", "med"),
+    (["Do you hear them", "in your ear"], "question",
+     "Sends people listening to their own head rather than the street.", "med"),
+    (["So what do you feel"], "question",
+     "Asked flatly, like a form. The gap between the question and the tone "
+     "is the unpleasant part.", "low"),
+    (["You are trapped"], "dread",
+     "Long hold on three words. Abstract enough to read as fiction, "
+     "heavy enough to sit badly.", "med"),
+    (["(Screaming internally)"], "curt",
+     "The joke version of every other card in this reel. Lands as relief, "
+     "then as recognition.", "low"),
+]
+
+# --------------------------------------------------------------------------
+# The wrong voice. Cards the machine should not be able to produce: posters,
+# captions, the register of a motivational feed. Scarcity is the whole effect —
+# a few across an hour read as something else using the tape, a run of them
+# reads as a joke account. The composition keeps them far apart.
+WRONG = [
+    (["Hungry dogs", "are never loyal"], "dread",
+     "A proverb on an interrogation tape. Sounds like advice and is not.", "low"),
+    (["You vs you", "Remember that"], "curt",
+     "Gym poster. Harmless alone, strange here, which is the point.", "low"),
+    (["No shortcuts"], "curt",
+     "Two words of someone else's motivation, delivered by something "
+     "with no interest in motivating anyone.", "low"),
+    (["Chill", "Its only chaos here"], "curt",
+     "The tape being reassuring, badly.", "low"),
+    (["( Dramatic pause )"], "ident",
+     "Stage direction as furniture. Works best where an ident would go.", "low"),
+    (["Tell your cat", "I said pspspsps"], "curt",
+     "The furthest from the tape's voice and the biggest laugh. "
+     "One appearance an hour is plenty.", "low"),
+]
+
 APPROVED = {
     "STREET": STREET,
     "RETURNED": RETURNED,
+    "INSIDE": INSIDE,
     "FILE": FILE,
     "SYSTEM": SYSTEM,
+    "WRONG": WRONG,
 }
 
 # --------------------------------------------------------------------------
