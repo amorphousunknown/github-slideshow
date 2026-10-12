@@ -1,0 +1,513 @@
+<title>The Watching Hour</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,400;1,6..72,300&family=IBM+Plex+Mono:wght@300;500&display=swap">
+<style>
+  /* Layout: one full-bleed stage. Message fills it; interstitial covers it; a thin
+     dwell meter and a small control rail sit at the bottom edge. Single dark theme
+     by intent — this room has no light mode. */
+  :root {
+    --void: #07080b;          /* ground */
+    --ash: #cfc8bd;           /* message text */
+    --ash-dim: #6a665f;       /* labels, counters */
+    --rust: #8c2f22;          /* the one accent: dried blood */
+    --bone: #e8e2d6;          /* highest-contrast text */
+    --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--void);
+    color: var(--ash);
+    font-family: var(--font-display);
+    overflow: hidden;
+  }
+
+  #stage {
+    position: relative;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 48px 16px 92px;
+    box-sizing: border-box;
+    isolation: isolate;
+  }
+
+  /* --- the message --- */
+  #message {
+    max-width: 30ch;
+    margin: 0;
+    text-align: center;
+    text-wrap: balance;
+    font-weight: 200;
+    font-size: clamp(1.75rem, 6.5vw, 4rem);
+    line-height: 1.14;
+    letter-spacing: -0.015em;
+    color: var(--bone);
+  }
+  #message .mark { color: var(--rust); font-style: italic; font-weight: 300; }
+
+  /* tone treatments — set by data-tone on the stage */
+  [data-tone="whisper"] #message {
+    font-size: clamp(1.1rem, 3.4vw, 1.6rem);
+    letter-spacing: 0.18em;
+    text-transform: lowercase;
+    color: var(--ash-dim);
+    max-width: 26ch;
+  }
+  [data-tone="dread"] #message { font-style: italic; color: var(--ash); }
+  [data-tone="scream"] #message {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: clamp(1.9rem, 9vw, 5rem);
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--bone);
+    line-height: 1;
+  }
+  [data-tone="glitch"] #message {
+    font-family: var(--font-mono);
+    font-weight: 300;
+    font-size: clamp(1.1rem, 4vw, 2rem);
+    color: var(--ash);
+  }
+
+  /* entrances, keyed to tone */
+  .in-fade { animation: fade-up 1500ms ease-out both; }
+  .in-snap { animation: snap 140ms steps(2, end) both; }
+  .in-jitter { animation: jitter 320ms steps(3, end) both; }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+  @keyframes snap {
+    0%   { opacity: 0; transform: scale(1.06); }
+    50%  { opacity: 1; }
+    100% { opacity: 1; transform: none; }
+  }
+  @keyframes jitter {
+    0%   { opacity: 0; transform: translate(-3px, 2px); }
+    40%  { opacity: 1; transform: translate(4px, -2px); }
+    100% { opacity: 1; transform: none; }
+  }
+
+  /* --- the interstitial --- */
+  #interstitial {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: var(--void);
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  #interstitial svg { width: min(86vmin, 620px); height: auto; max-width: 100%; display: block; }
+
+  /* --- dwell meter + rail --- */
+  #meter {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 2px;
+    background: #15161b;
+    z-index: 4;
+  }
+  #meter i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--rust);
+    transform-origin: left;
+  }
+
+  #rail {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, rgba(7,8,11,.96), rgba(7,8,11,0));
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ash-dim);
+  }
+  #rail button {
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: var(--ash);
+    background: transparent;
+    border: 1px solid #23252c;
+    border-radius: 2px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  #rail button:hover { border-color: var(--rust); color: var(--bone); }
+  #rail button:focus-visible,
+  #gate button:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; }
+  #count { font-variant-numeric: tabular-nums; }
+  #tone-label { color: #3f4149; }
+
+  /* --- the gate --- */
+  #gate {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    background: var(--void);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 28px;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  #gate h1 {
+    margin: 0;
+    font-weight: 200;
+    font-size: clamp(2.2rem, 9vw, 4.5rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--bone);
+    text-wrap: balance;
+  }
+  #gate p {
+    margin: 0;
+    max-width: 44ch;
+    font-family: var(--font-mono);
+    font-weight: 300;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    letter-spacing: 0.06em;
+    color: var(--ash-dim);
+  }
+  #gate button {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--bone);
+    background: transparent;
+    border: 1px solid var(--rust);
+    border-radius: 2px;
+    padding: 14px 28px;
+    cursor: pointer;
+  }
+  #gate button:hover { background: var(--rust); }
+
+  #vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, transparent 38%, rgba(0,0,0,.72) 100%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .in-fade, .in-snap, .in-jitter { animation: none; }
+  }
+</style>
+
+<div id="stage" data-tone="plain">
+  <p id="message">Press begin.</p>
+
+  <div id="interstitial" hidden aria-hidden="true">
+    <!-- The between-slide figure. Procedural: no bitmap, so it scales and stays small.
+         Swap this whole <svg> for an <img src="..."> to use your own photograph. -->
+    <svg viewBox="0 0 400 400" role="presentation">
+      <defs>
+        <filter id="grain" x="-15%" y="-15%" width="130%" height="130%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G" result="warped"/>
+          <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="3" result="speck"/>
+          <feColorMatrix in="speck" type="matrix" result="dust"
+            values="0 0 0 0 0.82  0 0 0 0 0.79  0 0 0 0 0.74  0 0 0 -1.1 0.52"/>
+          <feMerge>
+            <feMergeNode in="warped"/>
+            <feMergeNode in="dust"/>
+          </feMerge>
+        </filter>
+        <radialGradient id="pall" cx="50%" cy="42%" r="58%">
+          <stop offset="0%" stop-color="#2b2a28"/>
+          <stop offset="70%" stop-color="#121214"/>
+          <stop offset="100%" stop-color="#07080b"/>
+        </radialGradient>
+      </defs>
+      <g filter="url(#grain)">
+        <rect x="0" y="0" width="400" height="400" fill="#07080b"/>
+        <ellipse cx="200" cy="196" rx="96" ry="124" fill="url(#pall)"/>
+        <path d="M104 196 Q104 72 200 72 Q296 72 296 196" fill="none" stroke="#3a3833" stroke-width="2" opacity="0.5"/>
+        <ellipse cx="164" cy="178" rx="23" ry="30" fill="#040406"/>
+        <ellipse cx="236" cy="178" rx="23" ry="30" fill="#040406"/>
+        <ellipse cx="164" cy="174" rx="4" ry="4" fill="#9a948a" opacity="0.28"/>
+        <ellipse cx="236" cy="174" rx="4" ry="4" fill="#9a948a" opacity="0.28"/>
+        <path d="M178 266 Q200 278 222 266" fill="none" stroke="#040406" stroke-width="9" stroke-linecap="round"/>
+        <path d="M200 214 L200 240" stroke="#1b1a19" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="200" cy="196" rx="96" ry="124" fill="none" stroke="#8c2f22" stroke-width="1" opacity="0.22"/>
+      </g>
+    </svg>
+  </div>
+
+  <div id="vignette"></div>
+
+  <div id="meter"><i id="meter-fill"></i></div>
+
+  <div id="gate">
+    <h1>The Watching Hour</h1>
+    <p>Twenty-two messages. Each one stays as long as it wants to — a whisper lingers, a shout is gone before you finish it. Something sits in the gaps between them. Best in a dark room, with sound.</p>
+    <button id="begin" type="button">Begin</button>
+  </div>
+</div>
+
+<div id="rail" hidden>
+  <button id="toggle" type="button">Pause</button>
+  <button id="restart" type="button">Restart</button>
+  <button id="sound" type="button" aria-pressed="true">Sound on</button>
+  <span id="count">00 / 22</span>
+  <span id="tone-label">plain</span>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   THE DECK. Edit freely — each entry is { text, tone }.
+   Tone drives three things at once: how the line is typeset, how long
+   it holds on screen, and how hard the figure hits afterwards.
+     whisper — small, spaced, lowercase. Holds longest.
+     plain   — the house voice.
+     dread   — italic, slower than plain.
+     scream  — huge mono caps. Gone almost immediately.
+     glitch  — mono, jittery entrance, short hold.
+   Wrap a phrase in <span class="mark"> to redden it.
+   ------------------------------------------------------------------ */
+const SLIDES = [
+  { text: 'You have been in this room for four hours.', tone: 'plain' },
+  { text: 'it knows you stopped reading', tone: 'whisper' },
+  { text: 'The lock on your door only works from <span class="mark">one side</span>.', tone: 'dread' },
+  { text: 'Behind you', tone: 'scream' },
+  { text: 'No. Keep looking at the screen.', tone: 'plain' },
+  { text: 'count the breathing in the room', tone: 'whisper' },
+  { text: 'There should be one.', tone: 'dread' },
+  { text: 'ERR: SECOND VIEWER AT 0.0M', tone: 'glitch' },
+  { text: 'Your name was on the list before you were born.', tone: 'dread' },
+  { text: 'don’t blink yet', tone: 'whisper' },
+  { text: 'Too late', tone: 'scream' },
+  { text: 'The photograph in your hallway has changed. It has changed every night.', tone: 'plain' },
+  { text: 'you noticed on the fourteenth night', tone: 'whisper' },
+  { text: 'FRAME DROPPED — SOMETHING MOVED', tone: 'glitch' },
+  { text: 'It is wearing the shape of someone you trust.', tone: 'dread' },
+  { text: 'Ask it about the summer you were nine.', tone: 'plain' },
+  { text: 'it will answer', tone: 'whisper' },
+  { text: 'Run', tone: 'scream' },
+  { text: 'There is nowhere in this house it has not already been.', tone: 'dread' },
+  { text: 'the hallway light is off now', tone: 'whisper' },
+  { text: 'You turned it on an hour ago.', tone: 'plain' },
+  { text: 'Thank you for watching.', tone: 'dread' },
+];
+
+/* tone -> timing and treatment.
+   hold:   multiplier on the reading-time estimate
+   floor:  minimum milliseconds on screen
+   flash:  how long the figure sits between this slide and the next
+   enter:  entrance animation class
+   thud:   loudness of the hit on the figure, 0-1 */
+const TONE = {
+  whisper: { hold: 2.1,  floor: 3200, flash: 110,  enter: 'in-fade',   thud: 0.25 },
+  plain:   { hold: 1.0,  floor: 1800, flash: 190,  enter: 'in-fade',   thud: 0.45 },
+  dread:   { hold: 1.5,  floor: 2600, flash: 320,  enter: 'in-fade',   thud: 0.6  },
+  scream:  { hold: 0.34, floor: 480,  flash: 520,  enter: 'in-snap',   thud: 1.0  },
+  glitch:  { hold: 0.55, floor: 900,  flash: 90,   enter: 'in-jitter', thud: 0.8  },
+};
+
+const WORD_MS = 265;   // per word of reading time
+const BASE_MS = 620;   // time to register that the screen changed
+
+const stage = document.getElementById('stage');
+const messageEl = document.getElementById('message');
+const interstitial = document.getElementById('interstitial');
+const meterFill = document.getElementById('meter-fill');
+const rail = document.getElementById('rail');
+const gate = document.getElementById('gate');
+const countEl = document.getElementById('count');
+const toneLabel = document.getElementById('tone-label');
+const toggleBtn = document.getElementById('toggle');
+const soundBtn = document.getElementById('sound');
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function dwellFor(slide) {
+  const t = TONE[slide.tone] || TONE.plain;
+  const words = slide.text.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).length;
+  return Math.max(t.floor, Math.round((BASE_MS + words * WORD_MS) * t.hold));
+}
+function flashFor(slide) {
+  const t = TONE[slide.tone] || TONE.plain;
+  return reduced ? Math.max(260, t.flash) : t.flash;
+}
+
+/* ---- sound: one synthesised hit per interstitial, no files ---- */
+let audio = null;
+let soundOn = true;
+
+function hit(force) {
+  if (!soundOn) return;
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    const now = audio.currentTime;
+    const gain = audio.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.16 + 0.34 * force, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28 + 0.5 * force);
+    gain.connect(audio.destination);
+
+    const thump = audio.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.setValueAtTime(90 + 60 * force, now);
+    thump.frequency.exponentialRampToValueAtTime(28, now + 0.3);
+    thump.connect(gain);
+    thump.start(now);
+    thump.stop(now + 0.8 + 0.6 * force);
+
+    const len = Math.floor(audio.sampleRate * (0.1 + 0.25 * force));
+    const buf = audio.createBuffer(1, len, audio.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const noise = audio.createBufferSource();
+    noise.buffer = buf;
+    const nGain = audio.createGain();
+    nGain.gain.value = 0.05 + 0.12 * force;
+    noise.connect(nGain).connect(audio.destination);
+    noise.start(now);
+  } catch (e) { /* no audio available; the visuals carry it */ }
+}
+
+/* ---- the scheduler: one cancellable chain, invalidated by seq ---- */
+let index = -1;
+let seq = 0;
+let running = false;
+let phase = 'slide';    // 'slide' while a message holds, 'flash' during the figure
+let pendingAt = 0;      // timestamp the current step is due
+let remaining = 0;      // ms left when paused
+let timerId = null;
+
+function wait(ms) {
+  const mine = ++seq;
+  pendingAt = Date.now() + ms;
+  return new Promise(resolve => {
+    timerId = setTimeout(() => { if (mine === seq) resolve(); }, ms);
+  });
+}
+function cancel() {
+  seq++;
+  if (timerId) clearTimeout(timerId);
+  timerId = null;
+}
+
+function paintSlide(slide, dwell) {
+  const t = TONE[slide.tone] || TONE.plain;
+  stage.dataset.tone = slide.tone;
+  messageEl.innerHTML = slide.text;
+  messageEl.className = '';
+  // force a reflow so the entrance animation restarts on every slide
+  void messageEl.offsetWidth;
+  if (!reduced) messageEl.classList.add(t.enter);
+  countEl.textContent =
+    String(index + 1).padStart(2, '0') + ' / ' + String(SLIDES.length).padStart(2, '0');
+  toneLabel.textContent = slide.tone;
+  runMeter(dwell);
+}
+
+function runMeter(ms) {
+  meterFill.style.transition = 'none';
+  meterFill.style.width = '0%';
+  void meterFill.offsetWidth;
+  meterFill.style.transition = 'width ' + ms + 'ms linear';
+  meterFill.style.width = '100%';
+}
+function freezeMeter() {
+  const w = getComputedStyle(meterFill).width;
+  meterFill.style.transition = 'none';
+  meterFill.style.width = w;
+}
+
+async function showInterstitial(slide) {
+  const ms = flashFor(slide);
+  phase = 'flash';
+  interstitial.hidden = false;
+  hit((TONE[slide.tone] || TONE.plain).thud);
+  await wait(ms);
+  interstitial.hidden = true;
+}
+
+async function play() {
+  running = true;
+  toggleBtn.textContent = 'Pause';
+  while (running) {
+    index++;
+    if (index >= SLIDES.length) { index = -1; continue; }   // loop forever
+    const slide = SLIDES[index];
+    const dwell = remaining || dwellFor(slide);
+    remaining = 0;
+    phase = 'slide';
+    paintSlide(slide, dwell);
+    await wait(dwell);
+    if (!running) return;
+    await showInterstitial(slide);
+    if (!running) return;
+  }
+}
+
+function pause() {
+  running = false;
+  // only a partially-watched message is worth resuming; a cut-short flash is not
+  remaining = phase === 'slide' ? Math.max(0, pendingAt - Date.now()) : 0;
+  cancel();
+  freezeMeter();
+  interstitial.hidden = true;
+  toggleBtn.textContent = 'Resume';
+}
+
+function resume() {
+  // step back one so play() lands on the same slide with its leftover time
+  index--;
+  play();
+}
+
+document.getElementById('begin').addEventListener('click', () => {
+  gate.hidden = true;
+  rail.hidden = false;
+  if (soundOn) hit(0.3);          // unlocks audio inside the click
+  index = -1;
+  remaining = 0;
+  play();
+});
+
+toggleBtn.addEventListener('click', () => { running ? pause() : resume(); });
+
+document.getElementById('restart').addEventListener('click', () => {
+  cancel();
+  running = false;
+  remaining = 0;
+  index = -1;
+  interstitial.hidden = true;
+  play();
+});
+
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? 'Sound on' : 'Sound off';
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
+  if (soundOn) hit(0.2);
+});
+
+document.addEventListener('keydown', e => {
+  if (gate.hidden === false) return;
+  if (e.code === 'Space') { e.preventDefault(); running ? pause() : resume(); }
+});
+</script>
