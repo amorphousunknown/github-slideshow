@@ -1,0 +1,693 @@
+<title>Debrief Tape 4</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap">
+<style>
+  /* Layout: a 4:3 tape frame centred in black, the way a VHS transfer letterboxes
+     on a modern screen. Questions sit in the upper-left third, left-aligned on hard
+     line breaks, under a grain + scanline + chromatic-fringe stack. A small control
+     rail sits outside the frame. Single dark theme by intent — this tape has no light mode. */
+  :root {
+    --void: #050506;          /* the black around the tape */
+    --tape: #0a0a0c;          /* inside the frame */
+    --cg: #e9ece8;            /* character-generator white */
+    --cg-dim: #5c6060;
+    --fringe-r: rgba(255, 24, 72, 0.58);
+    --fringe-c: rgba(30, 255, 206, 0.42);
+    --led: #d41a10;           /* the clock's red */
+    --rule: #191a1e;
+    --font-cg: "VT323", "Share Tech Mono", ui-monospace, monospace;
+    --font-ui: "Share Tech Mono", ui-monospace, Menlo, monospace;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--void);
+    color: var(--cg);
+    font-family: var(--font-ui);
+    overflow: hidden;
+  }
+
+  #stage {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 12px 16px 72px;
+    box-sizing: border-box;
+  }
+
+  /* ---------- the tape frame ---------- */
+  #frame {
+    position: relative;
+    height: min(100%, calc(75vw - 24px));
+    aspect-ratio: 4 / 3;
+    max-width: 100%;
+    background: var(--tape);
+    overflow: hidden;
+    container-type: inline-size;
+    isolation: isolate;
+    box-shadow: 0 0 0 1px var(--rule), 0 0 60px rgba(0,0,0,.9);
+  }
+
+  /* ---------- the caption block ---------- */
+  #caption {
+    position: absolute;
+    left: 13%;
+    top: 23%;
+    right: 8%;
+    margin: 0;
+    font-family: var(--font-cg);
+    font-size: 7.4cqw;
+    line-height: 1.16;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cg);
+    text-shadow:
+      -0.035em 0 0 var(--fringe-r),
+       0.035em 0 0 var(--fringe-c),
+       0 0 0.28em rgba(233, 236, 232, 0.38);
+  }
+  #caption .line { display: block; white-space: pre-wrap; }
+
+  [data-tone="glitch"] #caption { color: #cfd4cf; letter-spacing: 0.11em; }
+  [data-tone="scream"] #caption { font-size: 11cqw; letter-spacing: 0.02em; }
+  [data-tone="dread"]  #caption { color: #d7d9d4; }
+
+  /* redaction: bars laid over the frame, as if the tape was struck before release */
+  .bar {
+    position: absolute;
+    background: #000;
+    border-radius: 36%;
+    filter: blur(0.35cqw);
+    z-index: 2;
+  }
+
+  /* ---------- the clock card ---------- */
+  #clock {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: #000;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 2cqw;
+  }
+  #clock svg { width: 46cqw; height: auto; display: block; }
+  #clock figcaption {
+    font-family: var(--font-cg);
+    font-size: 5cqw;
+    letter-spacing: 0.1em;
+    color: var(--led);
+    text-shadow: 0 0 0.5em rgba(212, 26, 16, 0.85);
+  }
+
+  /* ---------- the interstitial ---------- */
+  #interstitial {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: #000;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  #interstitial svg { width: 100%; height: 100%; display: block; }
+  #interstitial .tear {
+    position: absolute;
+    left: -6%;
+    width: 112%;
+    background: rgba(226, 230, 226, 0.09);
+    mix-blend-mode: screen;
+  }
+
+  /* ---------- tape artefacts, always on ---------- */
+  #grain, #scan, #vignette, #roll { position: absolute; inset: 0; pointer-events: none; }
+  #grain {
+    z-index: 6;
+    opacity: 0.34;
+    mix-blend-mode: screen;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: crawl 700ms steps(4, end) infinite;
+  }
+  @keyframes crawl {
+    0%   { background-position: 0 0; }
+    25%  { background-position: -37px 19px; }
+    50%  { background-position: 23px -41px; }
+    75%  { background-position: -13px -7px; }
+    100% { background-position: 31px 29px; }
+  }
+  #scan {
+    z-index: 7;
+    opacity: 0.5;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0 2px,
+      rgba(0,0,0,0.45) 2px 4px
+    );
+  }
+  #roll {
+    z-index: 8;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0%,
+      rgba(236,240,236,0.05) 42%,
+      rgba(236,240,236,0.11) 50%,
+      rgba(236,240,236,0.05) 58%,
+      rgba(0,0,0,0) 100%
+    );
+    height: 22%;
+    inset: auto 0 auto 0;
+    animation: roll 9.3s linear infinite;
+  }
+  @keyframes roll {
+    0%   { transform: translateY(-30%); opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { transform: translateY(460%); opacity: 0; }
+  }
+  #vignette {
+    z-index: 9;
+    background: radial-gradient(ellipse at 50% 48%, transparent 46%, rgba(0,0,0,.82) 100%);
+  }
+
+  #timecode {
+    position: absolute;
+    right: 5%;
+    bottom: 7%;
+    z-index: 10;
+    font-family: var(--font-cg);
+    font-size: 3.4cqw;
+    letter-spacing: 0.12em;
+    color: rgba(233, 236, 232, 0.4);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 0.3em rgba(233,236,232,.3);
+  }
+
+  /* ---------- the gate ---------- */
+  #gate {
+    position: absolute;
+    inset: 0;
+    z-index: 11;
+    background: #000;
+    display: grid;
+    place-content: center;
+    justify-items: start;
+    gap: 3cqw;
+    padding: 0 13%;
+  }
+  #gate h1 {
+    margin: 0;
+    font-family: var(--font-cg);
+    font-weight: 400;
+    font-size: 9cqw;
+    line-height: 1.1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--cg);
+    text-shadow: -0.035em 0 0 var(--fringe-r), 0.035em 0 0 var(--fringe-c);
+  }
+  #gate p {
+    margin: 0;
+    max-width: 46ch;
+    font-family: var(--font-cg);
+    font-size: 4cqw;
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+    color: var(--cg-dim);
+  }
+  #gate button {
+    font-family: var(--font-cg);
+    font-size: 4.2cqw;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--cg);
+    background: transparent;
+    border: 1px solid #2a2c2c;
+    padding: 1.4cqw 4cqw;
+    cursor: pointer;
+  }
+  #gate button:hover { border-color: var(--led); color: #fff; }
+
+  /* ---------- rail ---------- */
+  #rail {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 12;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, rgba(5,5,6,.97), rgba(5,5,6,0));
+    font-family: var(--font-ui);
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--cg-dim);
+  }
+  #rail button {
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: var(--cg);
+    background: transparent;
+    border: 1px solid var(--rule);
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  #rail button:hover { border-color: var(--led); color: #fff; }
+  #rail button:focus-visible,
+  #gate button:focus-visible { outline: 2px solid var(--led); outline-offset: 2px; }
+  #count { font-variant-numeric: tabular-nums; }
+  #tone-label { color: #35383a; }
+
+  #meter { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #111214; z-index: 11; }
+  #meter i { display: block; height: 100%; width: 0; background: var(--led); }
+
+  @media (prefers-reduced-motion: reduce) {
+    #grain, #roll { animation: none; }
+    #roll { opacity: 0; }
+  }
+</style>
+
+<div id="stage">
+  <div id="frame" data-tone="question">
+    <p id="caption"><span class="line">Press play.</span></p>
+
+    <div id="bars"></div>
+
+    <figure id="clock" hidden>
+      <div id="clock-digits"></div>
+      <figcaption id="clock-label"></figcaption>
+    </figure>
+
+    <div id="interstitial" hidden aria-hidden="true">
+      <!-- The frame between questions. Procedural, so it ships with no bitmap.
+           To use a photograph instead, replace this whole <svg> with <img src="...">. -->
+      <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" role="presentation">
+        <defs>
+          <filter id="degrade" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="4" seed="11" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="11" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="5" result="sp"/>
+            <feColorMatrix in="sp" type="matrix" result="dust"
+              values="0 0 0 0 0.9  0 0 0 0 0.92  0 0 0 0 0.9  0 0 0 -1.25 0.58"/>
+            <feMerge><feMergeNode in="warp"/><feMergeNode in="dust"/></feMerge>
+          </filter>
+          <radialGradient id="pall" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#32322f"/>
+            <stop offset="68%" stop-color="#101011"/>
+            <stop offset="100%" stop-color="#000"/>
+          </radialGradient>
+        </defs>
+        <g filter="url(#degrade)">
+          <rect x="0" y="0" width="400" height="300" fill="#000"/>
+          <ellipse cx="200" cy="150" rx="74" ry="96" fill="url(#pall)"/>
+          <path d="M126 150 Q126 54 200 54 Q274 54 274 150" fill="none" stroke="#45443e" stroke-width="2" opacity="0.45"/>
+          <ellipse cx="174" cy="136" rx="18" ry="24" fill="#000"/>
+          <ellipse cx="226" cy="136" rx="18" ry="24" fill="#000"/>
+          <ellipse cx="174" cy="133" rx="3.2" ry="3.2" fill="#b9b4a8" opacity="0.3"/>
+          <ellipse cx="226" cy="133" rx="3.2" ry="3.2" fill="#b9b4a8" opacity="0.3"/>
+          <path d="M182 206 Q200 216 218 206" fill="none" stroke="#000" stroke-width="7" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+
+    <div id="grain"></div>
+    <div id="scan"></div>
+    <div id="roll"></div>
+    <div id="vignette"></div>
+    <div id="timecode">00:00:00</div>
+
+    <div id="gate">
+      <h1>Debrief<br>Tape 4</h1>
+      <p>Twenty questions, asked by something that already has your file. Each one waits as long as it expects you to need. Watch in the dark, with sound.</p>
+      <button id="begin" type="button">Play</button>
+    </div>
+
+    <div id="meter"><i id="meter-fill"></i></div>
+  </div>
+</div>
+
+<div id="rail" hidden>
+  <button id="toggle" type="button">Pause</button>
+  <button id="restart" type="button">Rewind</button>
+  <button id="sound" type="button" aria-pressed="true">Sound on</button>
+  <span id="count">00 / 20</span>
+  <span id="tone-label">question</span>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   THE TAPE. Each entry is { lines, tone } — lines break exactly where
+   you write them, the way a character generator wrote them in 1987.
+   No terminal punctuation; these are forms, not sentences.
+
+   tone drives typesetting, how long the question waits, and how hard
+   the frame between questions hits:
+     question — the house voice. Waits for an answer.
+     dread    — the ones it already knows the answer to. Waits longest.
+     curt     — clipped follow-ups.
+     glitch   — the tape speaking for itself.
+     scream   — one word, large, gone almost before you read it.
+
+   Optional per-slide:
+     bars  — redaction blocks, [left%, top%, width%, height%]
+     clock — { time, label } renders the seven-segment card instead
+   ------------------------------------------------------------------ */
+const SLIDES = [
+  { lines: ['Subject is seated', 'and responsive'], tone: 'curt' },
+  { lines: ['Do you have any', 'regrets'], tone: 'question' },
+  { lines: ['Did you notice a', 'change in', 'temperature or', 'air pressure'], tone: 'question' },
+  { lines: ['Answer aloud', 'The room is listening'], tone: 'curt' },
+  { lines: ['What do you', 'remember of your', 'life before'], tone: 'dread',
+    bars: [[13, 46, 17, 7], [36, 46, 10, 7]] },
+  { lines: ['That is not what', 'you said last time'], tone: 'dread' },
+  { lines: ['TRACKING', 'SUBJECT MOVED OFF FRAME'], tone: 'glitch' },
+  { lines: ['Were non human', 'entities present'], tone: 'question' },
+  { lines: ['How many'], tone: 'curt' },
+  { lines: ['You said four', 'We counted five'], tone: 'dread' },
+  { lines: ['Describe the fifth'], tone: 'question' },
+  { clock: { time: '4:04', label: 'SLEEP nOt FOUnd' }, tone: 'alarm' },
+  { lines: ['You have woken at', 'this hour every', 'night since'], tone: 'dread' },
+  { lines: ['Something woke you'], tone: 'curt' },
+  { lines: ['Did you complete', 'the objective'], tone: 'question' },
+  { lines: ['You were not told', 'the objective'], tone: 'dread' },
+  { lines: ['Behind you'], tone: 'scream' },
+  { lines: ['Do not turn around', 'Keep answering'], tone: 'curt' },
+  { lines: ['SIGNAL DEGRADED', 'SECOND VOICE ON TAPE'], tone: 'glitch' },
+  { lines: ['Thank you', 'We will ask again', 'tomorrow'], tone: 'dread' },
+];
+
+/* hold:  multiplier on the reading-time estimate
+   floor: minimum milliseconds on screen
+   flash: how long the frame between questions lasts
+   thud:  loudness of the hit on that frame, 0-1 */
+const TONE = {
+  question: { hold: 1.45, floor: 3400, flash: 150, thud: 0.5  },
+  dread:    { hold: 1.8,  floor: 3800, flash: 330, thud: 0.65 },
+  curt:     { hold: 1.0,  floor: 2200, flash: 210, thud: 0.5  },
+  glitch:   { hold: 0.55, floor: 1100, flash: 80,  thud: 0.85 },
+  scream:   { hold: 0.34, floor: 620,  flash: 520, thud: 1.0  },
+  alarm:    { hold: 2.0,  floor: 4400, flash: 420, thud: 0.7  },
+};
+
+const WORD_MS = 280;
+const BASE_MS = 700;
+
+const frame = document.getElementById('frame');
+const captionEl = document.getElementById('caption');
+const barsEl = document.getElementById('bars');
+const clockEl = document.getElementById('clock');
+const clockDigits = document.getElementById('clock-digits');
+const clockLabel = document.getElementById('clock-label');
+const interstitial = document.getElementById('interstitial');
+const meterFill = document.getElementById('meter-fill');
+const timecodeEl = document.getElementById('timecode');
+const rail = document.getElementById('rail');
+const gate = document.getElementById('gate');
+const countEl = document.getElementById('count');
+const toneLabel = document.getElementById('tone-label');
+const toggleBtn = document.getElementById('toggle');
+const soundBtn = document.getElementById('sound');
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tone = s => TONE[s.tone] || TONE.question;
+
+function dwellFor(slide) {
+  const t = tone(slide);
+  const words = slide.clock
+    ? 6
+    : slide.lines.join(' ').trim().split(/\s+/).length;
+  return Math.max(t.floor, Math.round((BASE_MS + words * WORD_MS) * t.hold));
+}
+function flashFor(slide) {
+  const ms = tone(slide).flash;
+  return reduced ? Math.max(260, ms) : ms;
+}
+
+/* ---------- seven-segment rendering for the clock card ---------- */
+const SEGMENTS = {
+  '0': 'abcdef', '1': 'bc', '2': 'abdeg', '3': 'abcdg', '4': 'bcfg',
+  '5': 'acdfg', '6': 'acdefg', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg',
+};
+const CELL_W = 56, CELL_H = 104, T = 12, GAP = 18, COLON_W = 24;
+
+function hseg(x, y) {
+  const len = CELL_W - 2 * T;
+  return `${x},${y + T / 2} ${x + T / 2},${y} ${x + len - T / 2},${y} ${x + len},${y + T / 2} ${x + len - T / 2},${y + T} ${x + T / 2},${y + T}`;
+}
+function vseg(x, y, len) {
+  return `${x + T / 2},${y} ${x + T},${y + T / 2} ${x + T},${y + len - T / 2} ${x + T / 2},${y + len} ${x},${y + len - T / 2} ${x},${y + T / 2}`;
+}
+function digitPolys(ch, ox) {
+  const mid = (CELL_H - T) / 2;        // top of the middle bar
+  const run = mid - T;                 // a vertical segment's length
+  const geo = {
+    a: hseg(ox + T, 0),
+    b: vseg(ox + CELL_W - T, T, run),
+    c: vseg(ox + CELL_W - T, mid + T, run),
+    d: hseg(ox + T, CELL_H - T),
+    e: vseg(ox, mid + T, run),
+    f: vseg(ox, T, run),
+    g: hseg(ox + T, mid),
+  };
+  const on = SEGMENTS[ch] || '';
+  return [...on].map(k => `<polygon points="${geo[k]}" fill="#d41a10"/>`).join('');
+}
+function buildClock(time) {
+  let x = 0, out = '';
+  for (const ch of time) {
+    if (ch === ':') {
+      const r = T / 2;
+      out += `<rect x="${x + (COLON_W - T) / 2}" y="${CELL_H * 0.27}" width="${T}" height="${T}" rx="${r}" fill="#d41a10"/>`;
+      out += `<rect x="${x + (COLON_W - T) / 2}" y="${CELL_H * 0.63}" width="${T}" height="${T}" rx="${r}" fill="#d41a10"/>`;
+      x += COLON_W + GAP;
+    } else {
+      out += digitPolys(ch, x);
+      x += CELL_W + GAP;
+    }
+  }
+  const w = Math.max(x - GAP, 1);
+  return `<svg viewBox="-14 -14 ${w + 28} ${CELL_H + 28}" role="img" aria-label="${time}">
+    <defs><filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter></defs>
+    <g filter="url(#bloom)">${out}</g>
+  </svg>`;
+}
+
+/* ---------- sound: one synthesised hit per frame, no files ---------- */
+let audio = null;
+let soundOn = true;
+
+function hit(force) {
+  if (!soundOn) return;
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    const now = audio.currentTime;
+
+    const gain = audio.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.14 + 0.32 * force, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3 + 0.5 * force);
+    gain.connect(audio.destination);
+
+    const thump = audio.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.setValueAtTime(86 + 64 * force, now);
+    thump.frequency.exponentialRampToValueAtTime(26, now + 0.32);
+    thump.connect(gain);
+    thump.start(now);
+    thump.stop(now + 0.85 + 0.6 * force);
+
+    // tape hiss burst, band-limited so it reads as dropout rather than white noise
+    const len = Math.floor(audio.sampleRate * (0.1 + 0.26 * force));
+    const buf = audio.createBuffer(1, len, audio.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const noise = audio.createBufferSource();
+    noise.buffer = buf;
+    const bp = audio.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1800 + 2600 * force;
+    bp.Q.value = 0.7;
+    const nGain = audio.createGain();
+    nGain.gain.value = 0.06 + 0.13 * force;
+    noise.connect(bp).connect(nGain).connect(audio.destination);
+    noise.start(now);
+  } catch (e) { /* no audio available; the picture carries it */ }
+}
+
+/* ---------- scheduler: one cancellable chain, invalidated by seq ---------- */
+let index = -1;
+let seq = 0;
+let running = false;
+let phase = 'slide';
+let pendingAt = 0;
+let remaining = 0;
+let timerId = null;
+
+function wait(ms) {
+  const mine = ++seq;
+  pendingAt = Date.now() + ms;
+  return new Promise(resolve => {
+    timerId = setTimeout(() => { if (mine === seq) resolve(); }, ms);
+  });
+}
+function cancel() {
+  seq++;
+  if (timerId) clearTimeout(timerId);
+  timerId = null;
+}
+
+function paintSlide(slide, dwell) {
+  frame.dataset.tone = slide.tone;
+  barsEl.innerHTML = '';
+
+  if (slide.clock) {
+    captionEl.hidden = true;
+    clockEl.hidden = false;
+    clockDigits.innerHTML = buildClock(slide.clock.time);
+    clockLabel.textContent = slide.clock.label;
+  } else {
+    clockEl.hidden = true;
+    captionEl.hidden = false;
+    captionEl.innerHTML = slide.lines
+      .map(l => '<span class="line">' + l + '</span>')
+      .join('');
+    for (const [x, y, w, h] of slide.bars || []) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.cssText = `left:${x}%;top:${y}%;width:${w}%;height:${h}%`;
+      barsEl.appendChild(bar);
+    }
+  }
+
+  countEl.textContent =
+    String(index + 1).padStart(2, '0') + ' / ' + String(SLIDES.length).padStart(2, '0');
+  toneLabel.textContent = slide.tone;
+  runMeter(dwell);
+}
+
+function runMeter(ms) {
+  meterFill.style.transition = 'none';
+  meterFill.style.width = '0%';
+  void meterFill.offsetWidth;
+  meterFill.style.transition = 'width ' + ms + 'ms linear';
+  meterFill.style.width = '100%';
+}
+function freezeMeter() {
+  const w = getComputedStyle(meterFill).width;
+  meterFill.style.transition = 'none';
+  meterFill.style.width = w;
+}
+
+/* tape timecode, counting from the moment Play was pressed */
+let tapeStart = 0;
+let tcTimer = null;
+function startTimecode() {
+  tapeStart = Date.now();
+  clearInterval(tcTimer);
+  tcTimer = setInterval(() => {
+    if (!running) return;
+    const s = Math.floor((Date.now() - tapeStart) / 1000);
+    timecodeEl.textContent =
+      String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
+      String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' +
+      String(s % 60).padStart(2, '0');
+  }, 500);
+}
+
+async function showInterstitial(slide) {
+  const ms = flashFor(slide);
+  phase = 'flash';
+  interstitial.querySelectorAll('.tear').forEach(el => el.remove());
+  if (!reduced) {
+    const n = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) {
+      const tear = document.createElement('div');
+      tear.className = 'tear';
+      tear.style.top = (Math.random() * 90) + '%';
+      tear.style.height = (1 + Math.random() * 5) + '%';
+      tear.style.transform = 'translateX(' + (Math.random() * 10 - 5) + '%)';
+      interstitial.appendChild(tear);
+    }
+  }
+  interstitial.hidden = false;
+  hit(tone(slide).thud);
+  await wait(ms);
+  interstitial.hidden = true;
+}
+
+async function play() {
+  running = true;
+  toggleBtn.textContent = 'Pause';
+  while (running) {
+    index++;
+    if (index >= SLIDES.length) { index = -1; continue; }   // the tape loops
+    const slide = SLIDES[index];
+    const dwell = remaining || dwellFor(slide);
+    remaining = 0;
+    phase = 'slide';
+    paintSlide(slide, dwell);
+    await wait(dwell);
+    if (!running) return;
+    await showInterstitial(slide);
+    if (!running) return;
+  }
+}
+
+function pause() {
+  running = false;
+  // only a partially-watched question is worth resuming; a cut-short frame is not
+  remaining = phase === 'slide' ? Math.max(0, pendingAt - Date.now()) : 0;
+  cancel();
+  freezeMeter();
+  interstitial.hidden = true;
+  toggleBtn.textContent = 'Resume';
+}
+
+function resume() {
+  index--;          // step back so play() lands on the same slide
+  play();
+}
+
+document.getElementById('begin').addEventListener('click', () => {
+  gate.hidden = true;
+  rail.hidden = false;
+  if (soundOn) hit(0.3);          // unlocks audio inside the click
+  index = -1;
+  remaining = 0;
+  startTimecode();
+  play();
+});
+
+toggleBtn.addEventListener('click', () => { running ? pause() : resume(); });
+
+document.getElementById('restart').addEventListener('click', () => {
+  cancel();
+  running = false;
+  remaining = 0;
+  index = -1;
+  interstitial.hidden = true;
+  startTimecode();
+  play();
+});
+
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? 'Sound on' : 'Sound off';
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
+  if (soundOn) hit(0.2);
+});
+
+document.addEventListener('keydown', e => {
+  if (!gate.hidden) return;
+  if (e.code === 'Space') { e.preventDefault(); running ? pause() : resume(); }
+});
+</script>

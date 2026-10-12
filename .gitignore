@@ -2,3 +2,9 @@ _site/
 .sass-cache/
 .jekyll-metadata
 .bundle
+
+# tape renderer
+tape/build/
+*.mp4
+__pycache__/
+*.pyc
