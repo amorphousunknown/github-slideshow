@@ -58,6 +58,12 @@ TONES = {
 WORD_S = 0.28
 BASE_S = 0.70
 
+# Most cuts go straight from one card to the next. A frame between them is the
+# exception, so that it stays an ambush rather than a rhythm: roughly one cut in
+# seven shows the grins, and about one in fifty shows the face.
+GRIN_RATE = 0.14
+FACE_RATE = 0.02
+
 
 def dwell(lines, tone):
     t = TONES[tone]
@@ -242,9 +248,86 @@ def render_black():
     return finish(Image.new("RGBA", (W, H), (6, 6, 8, 255)))
 
 
+# ------------------------------------------------------------ the grins
+def _shaky(draw, pts, rng, width=2, fill=(236, 240, 236)):
+    """Draw a polyline the way a marker would: subdivided and never quite straight."""
+    out = []
+    for i in range(len(pts) - 1):
+        (x0, y0), (x1, y1) = pts[i], pts[i + 1]
+        steps = max(2, int(math.hypot(x1 - x0, y1 - y0) / 6))
+        for s in range(steps + 1):
+            t = s / steps
+            out.append((x0 + (x1 - x0) * t + rng.uniform(-1.1, 1.1),
+                        y0 + (y1 - y0) * t + rng.uniform(-1.1, 1.1)))
+    draw.line(out, fill=fill, width=width, joint="curve")
+
+
+def _grin(draw, rng, cx, cy, size, tilt):
+    """One scratched-on face: two dots and a mouthful of hatch marks."""
+    co, si = math.cos(tilt), math.sin(tilt)
+
+    def place(dx, dy):
+        return (cx + dx * co - dy * si, cy + dx * si + dy * co)
+
+    ink = (248, 250, 248)
+
+    # eyes: small, bright, deliberately mismatched
+    for side in (-1, 1):
+        ex, ey = place(side * size * rng.uniform(0.26, 0.34),
+                       -size * rng.uniform(0.26, 0.36))
+        r = size * rng.uniform(0.035, 0.055)
+        draw.ellipse([ex - r, ey - r * rng.uniform(0.9, 1.25),
+                      ex + r, ey + r * rng.uniform(0.9, 1.25)], fill=ink)
+
+    # the mouth: a crescent that dips in the middle, struck through with teeth
+    span = size * rng.uniform(0.85, 1.15)
+    sag = size * rng.uniform(0.22, 0.38)
+
+    def on_arc(t):
+        return ((t - 0.5) * span, sag * (1 - 4 * (t - 0.5) ** 2) + size * 0.06)
+
+    w = int(rng.integers(2, 4))
+    _shaky(draw, [place(*on_arc(i / 14)) for i in range(15)], rng, width=w, fill=ink)
+
+    n = int(rng.integers(6, 12))
+    for i in range(n):
+        t = (i + 0.5) / n
+        ax, ay = on_arc(t)
+        up = size * rng.uniform(0.13, 0.26)
+        down = size * rng.uniform(0.02, 0.09)
+        lean = rng.uniform(-0.06, 0.06) * size
+        _shaky(draw, [place(ax - lean, ay - up), place(ax + lean, ay + down)],
+               rng, width=max(1, w - 1), fill=ink)
+
+
+def render_grins(seed):
+    """The common frame between cards: a handful of grins scratched on the dark.
+
+    Lighter than render_figure on purpose — it should read as something glimpsed,
+    not as a portrait. Several faces at different sizes, some running off the edge.
+    """
+    rng = np.random.default_rng(seed)
+    img = Image.new("RGB", (W, H), (0, 0, 0))
+    d = ImageDraw.Draw(img)
+
+    for _ in range(int(rng.integers(4, 8))):
+        size = H * rng.uniform(0.16, 0.34)
+        cx = rng.uniform(-size * 0.3, W + size * 0.3)
+        cy = rng.uniform(size * 0.4, H - size * 0.3)
+        _grin(d, rng, cx, cy, size, rng.uniform(-0.28, 0.28))
+
+    a = np.asarray(img, np.float32) * 1.45           # thin strokes, so lift them first
+    a += rng.normal(0, 9, (H, W, 1))                 # grain, so it sits on the tape
+    for _ in range(int(rng.integers(0, 4))):          # the odd tracking tear
+        top = int(rng.integers(0, H - 14))
+        hgt = int(rng.integers(2, 14))
+        a[top:top + hgt] = np.roll(a[top:top + hgt], int(rng.integers(-26, 26)), axis=1)
+    return finish(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGBA"))
+
+
 # ------------------------------------------------------------ the figure
 def render_figure(seed):
-    """The frame between cards. Procedural, different every time it appears."""
+    """The rare frame: an actual face. Kept scarce so it still lands."""
     rng = np.random.default_rng(seed)
     y, x = np.mgrid[0:H, 0:W].astype(np.float32)
 
@@ -412,6 +495,11 @@ def main():
     ap.add_argument("--keep", action="store_true", help="keep the frame cache")
     ap.add_argument("--clocks", action="store_true",
                     help="include the red seven-segment cards (off by default)")
+    ap.add_argument("--block", help="render an approved block from blocks.py")
+    ap.add_argument("--grin-rate", type=float, default=GRIN_RATE,
+                    help="share of cuts that show the grins (default %(default)s)")
+    ap.add_argument("--face-rate", type=float, default=FACE_RATE,
+                    help="share of cuts that show the face (default %(default)s)")
     args = ap.parse_args()
 
     rng = np.random.default_rng(SEED)
@@ -423,17 +511,31 @@ def main():
         shutil.rmtree(work)
     os.makedirs(frames, exist_ok=True)
 
-    target = args.minutes * 60.0
-    items, est = build_playlist(target, rng, clocks=args.clocks)
-    print(f"playlist: {len(items)} cards, {est/60:.1f} min")
+    if args.block:
+        import blocks
+        deck = blocks.BLOCKS[args.block]
+        items = [
+            dict(kind="black" if t == "black" else "caption",
+                 lines=l, tone=t, **({"seconds": 4.0} if t == "black" else {}))
+            for l, t, _impact, _risk in deck
+        ]
+        print(f"block {args.block}: {len(items)} approved cards, in order")
+    else:
+        target = args.minutes * 60.0
+        items, est = build_playlist(target, rng, clocks=args.clocks)
+        print(f"playlist: {len(items)} cards, {est/60:.1f} min")
 
     # one PNG per distinct card, reused wherever it recurs
     cache = {}
-    figures = []
+    figures, grins = [], []
     for i in range(14):
         p = os.path.join(frames, f"fig{i:02d}.png")
         render_figure(SEED + i * 977).save(p)
         figures.append(p)
+    for i in range(24):
+        p = os.path.join(frames, f"grin{i:02d}.png")
+        render_grins(SEED + i * 613).save(p)
+        grins.append(p)
 
     def frame_for(it):
         if it["kind"] == "black":
@@ -465,9 +567,18 @@ def main():
         card = frame_for(it)
         lines_out.append(f"file '{card}'\nduration {it['_dur']:.3f}")
         total += it["_dur"]
+        roll = rng.random()
+        pool = None
         if it["_flash"] > 0:
-            fig = figures[int(rng.integers(0, len(figures)))]
-            lines_out.append(f"file '{fig}'\nduration {it['_flash']:.3f}")
+            if roll < args.face_rate:
+                pool = figures
+            elif roll < args.face_rate + args.grin_rate:
+                pool = grins
+        if pool is None:
+            it["_flash"] = 0.0          # a straight cut, and no hit on the audio
+        else:
+            frame = pool[int(rng.integers(0, len(pool)))]
+            lines_out.append(f"file '{frame}'\nduration {it['_flash']:.3f}")
             total += it["_flash"]
     # the concat demuxer ignores the final duration unless the file repeats
     lines_out.append(f"file '{lines_out[-1].split(chr(10))[0][6:-1]}'")

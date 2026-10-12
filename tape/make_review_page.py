@@ -17,7 +17,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import blocks  # noqa: E402
-from render import TONES, dwell, render_figure, SEED  # noqa: E402
+from render import (TONES, dwell, render_figure, render_grins,  # noqa: E402
+                    SEED, GRIN_RATE, FACE_RATE)
 
 BLACK_SECONDS = 4.0
 
@@ -32,15 +33,20 @@ TONE_NOTE = {
 }
 
 
-def figures_b64(n=4):
-    out = []
-    for i in range(n):
-        img = render_figure(SEED + i * 977).convert("RGB")
-        img.thumbnail((300, 225))
-        buf = io.BytesIO()
-        img.save(buf, "JPEG", quality=72)
-        out.append(base64.b64encode(buf.getvalue()).decode())
-    return out
+def _b64(img):
+    img = img.convert("RGB")
+    img.thumbnail((300, 225))
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=74)
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def grins_b64(n=4):
+    return [_b64(render_grins(SEED + i * 613)) for i in range(n)]
+
+
+def figures_b64(n=2):
+    return [_b64(render_figure(SEED + i * 977)) for i in range(n)]
 
 
 def main():
@@ -75,10 +81,13 @@ def main():
         total += hold + flash
 
     mm, ss = divmod(total, 60)
-    figs = figures_b64()
     figs_html = "".join(
-        f'<img src="data:image/jpeg;base64,{b}" alt="Figure variant {i+1}">'
-        for i, b in enumerate(figs))
+        f'<img src="data:image/jpeg;base64,{b}" alt="Face variant {i+1}">'
+        for i, b in enumerate(figures_b64()))
+    grins_html = "".join(
+        f'<img src="data:image/jpeg;base64,{b}" alt="Grin variant {i+1}">'
+        for i, b in enumerate(grins_b64()))
+    cuts = sum(1 for c in deck if TONES[c[1]]["flash"] > 0)
     tone_rows = "".join(
         f"<tr><td class='t t-{k}'>{k}</td><td>{v}</td>"
         f"<td>{TONES[k]['floor']:.1f}s floor</td><td>{html.escape(TONE_NOTE[k])}</td></tr>"
@@ -175,12 +184,26 @@ def main():
      holds longer than a short one in the same voice. Between every pair of cards the
      figure cuts in for 0.08–0.52s depending on the outgoing card.</p>
 
-  <h2>The figure between cards</h2>
+  <h2>Between the cards</h2>
+  <p class="sub" style="margin-top:0">Most cuts go straight from one card to the next.
+     A frame between them is the exception, so it stays an ambush rather than a rhythm.
+     Of the {cuts} cuts in this block, roughly <b>{int(cuts*GRIN_RATE)}</b> show the grins
+     and <b>{max(1, int(cuts*FACE_RATE))}</b> shows the face. Which cuts get one is decided
+     per render, not written into the block.</p>
+
+  <h3 style="font-size:.9rem;color:var(--dim);margin:22px 0 8px;letter-spacing:.08em;
+             text-transform:uppercase">The grins · about 1 cut in 7 · 0.08–0.52s</h3>
+  <div class="figs">{grins_html}</div>
+  <p class="sub">Four to seven faces scratched on the dark at different sizes, some
+     running off the edge. Drawn fresh every appearance — the strokes, teeth, eyes and
+     positions are never the same twice, so it cannot read as one repeated still.</p>
+
+  <h3 style="font-size:.9rem;color:var(--dim);margin:22px 0 8px;letter-spacing:.08em;
+             text-transform:uppercase">The face · about 1 cut in 50 · 0.08–0.52s</h3>
   <div class="figs">{figs_html}</div>
-  <p class="sub">Generated fresh for each appearance — same face, different grain,
-     position and tracking tears every time, so it never looks like a repeated still.
-     It is on screen for a fraction of a second. Four of the fourteen variants shown.
-     This is the only image on the tape; everything else is type on black.</p>
+  <p class="sub">Held back deliberately. It appears perhaps once in this block, and
+     roughly ten to twenty times across an hour. Cut it entirely and the grins carry
+     the tape on their own.</p>
 
   <h2>Running order</h2>
   <ol>{"".join(rows)}</ol>
