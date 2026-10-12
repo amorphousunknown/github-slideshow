@@ -46,6 +46,7 @@ PAIRS = {
     "The house with": "Something else moves",
     "SUBJECT IDENTIFIED": "SUBJECT UNKNOWN",
     "Almost morning": "Not yet",
+    "Ignore this if": "Sorry if you are",
 }
 
 

@@ -50,6 +50,16 @@ STREET = [
     (["You have not stopped", "walking"], "curt",
      "The other half. Catches the ones still moving, who get it "
      "over their shoulder.", "med"),
+    (["Dont scream"], "scream",
+     "Shouted in the largest type on the tape, under a second. The form "
+     "contradicts the instruction, which is the joke.", "med"),
+    (["You have attracted", "the attention of", "something truly evil"], "dread",
+     "Long read, and the reader spends all of it being looked at. "
+     "Theatrical enough to stay fiction.", "med"),
+    (["Remember to", "look behind you"], "curt",
+     "Remember implies they were told before. Most will turn.", "med"),
+    (["Dont make", "eye contact"], "curt",
+     "Never says with what. The street supplies candidates.", "med"),
     (["Start walking through them"], "curt",
      "An instruction, and deliberately unclear what 'them' is — the crowd, "
      "or what is standing in it. Reads as a dare.", "med"),
@@ -115,6 +125,14 @@ RETURNED = [
      "in an interesting direction.", "low"),
     (["Take them home", "with you"], "curt",
      "An invitation rather than a threat, which makes it worse.", "med"),
+    (["Are your emotions", "strong enough", "when your body is gone"], "question",
+     "Asks what survives. The reel's whole premise put as a question "
+     "rather than a claim.", "low"),
+    (["Ignore this if", "you are living"], "curt",
+     "A polite exclusion. Setup — the beat before the payoff is what "
+     "makes the payoff work.", "low"),
+    (["Sorry if you are", "finding out you are not"], "dread",
+     "The apology is the horror. Best card on the tape.", "med"),
     (["One night is not", "very long"], "dread",
      "Closes the reel. Resignation rather than menace.", "low"),
 ]
@@ -280,6 +298,9 @@ INSIDE = [
     (["WARNING", "IT USES YOUR VOICE", "SO THAT YOU OBEY"], "glitch",
      "The machine warning the reader about itself, in the machine's own "
      "register. Explains the whole reel.", "med"),
+    (["Dont create monsters"], "dread",
+     "The only card that warns the reader about themselves. Reads as "
+     "advice, a rule, or an accusation depending on who catches it.", "low"),
     (["(Screaming internally)"], "curt",
      "The joke version of every other card in this reel. Lands as relief, "
      "then as recognition.", "low"),
