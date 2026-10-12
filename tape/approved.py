@@ -44,6 +44,9 @@ STREET = [
     (["Run"], "scream",
      "One word. The highest-risk card on the tape: no context survives at "
      "this speed, and some readers will simply believe it.", "high"),
+    (["Start walking through them"], "curt",
+     "An instruction, and deliberately unclear what 'them' is — the crowd, "
+     "or what is standing in it. Reads as a dare.", "med"),
     (["Wrong street"], "scream",
      "Disorienting without threatening. Does the work of Run at half the risk.", "med"),
     (["Not here"], "scream",
@@ -75,6 +78,66 @@ RETURNED = [
     (["Hell was full", "so I came back"], "curt",
      "The dead returning with swagger rather than sorrow. Sits well "
      "against the cards that miss someone.", "low"),
+    (["I waited all year", "for tonight"], "dread",
+     "Opens the reel. Establishes that the speaker has been counting.", "low"),
+    (["I only get", "until morning"], "dread",
+     "Puts a clock on everything else the reel says.", "low"),
+    (["Do you still live", "I cant tell tonight"], "question",
+     "Live as in reside, or live as in alive. The speaker genuinely "
+     "cannot tell, which is worse than a threat.", "med"),
+    (["I went back", "but you had moved on"], "dread",
+     "Moved house, moved on. Does more work than the line it replaced.", "low"),
+    (["They are not haunting you", "They are visiting"], "curt",
+     "Corrects the reader's assumption. Reframes the entire reel.", "low"),
+    (["Thank you for", "leaving the light off"], "dread",
+     "Gratitude for the wrong thing. The off is what makes it land.", "med"),
+    (["Next year", "I may not find you"], "dread",
+     "The loss is the speaker's, not the reader's. Rare on a horror tape.", "low"),
+    (["You stopped", "talking about me"], "dread",
+     "An accusation made of grief. The heaviest card in the reel.", "med"),
+    (["The costumes help"], "curt",
+     "Four words explaining how the dead are on the street at all tonight. "
+     "Makes the rest of the tape cohere.", "low"),
+    (["One night is not", "very long"], "dread",
+     "Closes the reel. Resignation rather than menace.", "low"),
+]
+
+# --------------------------------------------------------------------------
+# Tonight. The street as it actually is on the night — costumes, doors, sweets,
+# things handed over. These only work on the date they are projected.
+TONIGHT = [
+    (["Not all need", "costumes tonight"], "dread",
+     "Reads the crowd back to itself. Everyone checks everyone.", "low"),
+    (["Someone unseen", "is trying to get", "your attention"], "dread",
+     "Long read, and the reader spends all of it looking around.", "med"),
+    (["Check under the mask", "Not all have faces"], "dread",
+     "Specific instruction with a horrible second clause.", "med"),
+    (["It is not a mask"], "scream",
+     "Four words, large, under a second. Strongest short card kept.", "med"),
+    (["The sweets are fine", "The house is not"], "curt",
+     "Reassures and withdraws it in the same breath.", "low"),
+    (["Nobody lives there", "anymore"], "dread",
+     "The anymore is doing everything.", "low"),
+    (["That is definitely", "a cursed object"], "curt",
+     "Casual about the supernatural. Light relief that is still on theme.", "low"),
+    (["I hope you have pockets", "Some creatures need rides"], "curt",
+     "Charming and slightly wrong. Nothing else on the tape sounds like it.", "low"),
+    (["Some tricks", "involve sorcery"], "curt",
+     "Plays the night's own vocabulary straight.", "low"),
+    (["Behind the door", "they wait"], "dread",
+     "Works at every door on the street at once.", "low"),
+    (["It is wearing", "a costume too"], "dread",
+     "Turns every costume in view into a question.", "med"),
+    (["Too many to count"], "curt",
+     "Answers a question the tape never asked.", "low"),
+    (["Count again"], "curt",
+     "Best placed after the card above. Refuses to say what changed.", "low"),
+    (["Goodbye"], "scream",
+     "One word, large. Reads as the tape ending, which it is not.", "low"),
+    (["Almost morning"], "curt",
+     "True by the end of the night. The tape appears to know the hour.", "low"),
+    (["Not yet"], "curt",
+     "Answers the card above, or nothing at all.", "low"),
 ]
 
 # --------------------------------------------------------------------------
@@ -107,6 +170,18 @@ SYSTEM = [
      "Two words. The reader supplies the dread themselves.", "med"),
     (["SUBJECT UNKNOWN"], "glitch",
      "The reverse, and somehow worse. Good directly after the card above.", "low"),
+    (["BODIES 7", "COSTUMES 8"], "glitch",
+     "Two numbers that should match. The whole card is the gap.", "low"),
+    (["DOORBELL ACTIVITY", "AT VACANT ADDRESS"], "glitch",
+     "Something is knocking at a house with nobody in it.", "low"),
+    (["SUGAR LEVELS NOMINAL", "SOUL COUNT LOW"], "glitch",
+     "Bureaucratic bathos. Funny first, then not.", "low"),
+    (["CURFEW LIFTED", "FOR THE DECEASED"], "glitch",
+     "Explains the night as policy, which is funnier and colder than magic.", "low"),
+    (["MASK DETECTED", "FACE NOT DETECTED"], "glitch",
+     "The machine looking at the crowd and failing. Best status card kept.", "med"),
+    (["WELCOME VISITORS"], "ident",
+     "Hospitable, placed among cards that are not. Works as an opener.", "low"),
 ]
 
 # --------------------------------------------------------------------------
@@ -147,6 +222,10 @@ WRONG = [
      "with no interest in motivating anyone.", "low"),
     (["Chill", "Its only chaos here"], "curt",
      "The tape being reassuring, badly.", "low"),
+    (["Sleep like the dead"], "curt",
+     "A saying that stops being a saying on this tape.", "low"),
+    (["Smile", "Its good for stress"], "curt",
+     "Wellness advice from something with teeth. Pairs with the grins.", "low"),
     (["( Dramatic pause )"], "ident",
      "Stage direction as furniture. Works best where an ident would go.", "low"),
     (["Tell your cat", "I said pspspsps"], "curt",
@@ -157,6 +236,7 @@ WRONG = [
 APPROVED = {
     "STREET": STREET,
     "RETURNED": RETURNED,
+    "TONIGHT": TONIGHT,
     "INSIDE": INSIDE,
     "FILE": FILE,
     "SYSTEM": SYSTEM,
@@ -168,10 +248,14 @@ APPROVED = {
 # and these are not mine to guess at — see the questions put to them. Nothing
 # here renders.
 PENDING = [
-    "1/2  walking vs. stopped — two cards or one",
-    "17   THAT SCREAM WAS NOT HUMAN  (transcribed as 'screen')",
-    "18   unclear — possibly WHO LET YOU IN",
-    "21   WHICH EYE DO THEY SEE OUT OF  (transcribed as 'say')",
-    "28   SOMETHING GOT IN WITHOUT KEYS",
-    "38   SUBJECT UNAWARE / SUBJECT POSSESSED",
+    "1/2   walking vs. stopped — two cards or one",
+    "17    THAT SCREAM WAS NOT HUMAN        (transcribed as 'screen')",
+    "18    unclear — possibly WHO LET YOU IN",
+    "21    WHICH EYE DO THEY SEE OUT OF     (transcribed as 'say')",
+    "28    SOMETHING GOT IN WITHOUT KEYS",
+    "38    SUBJECT UNAWARE / SUBJECT POSSESSED",
+    "79b   DO YOU KNOW GHOULS GIVE OUT CANDY TOO   (transcribed as 'goals')",
+    "80    unclear — something about old doors and the possessed",
+    "85    EVEN THE DARKNESS IS ALIVE TONIGHT      (transcribed as 'is the life')",
+    "101   unclear — 'Well sleeping'",
 ]
