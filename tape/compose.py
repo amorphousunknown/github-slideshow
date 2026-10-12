@@ -32,6 +32,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import approved  # noqa: E402
 from render import TONES, dwell  # noqa: E402
 
+# Which hand each reel is set in. The machine keeps the character generator;
+# the dead get a serif so they do not sound like the apparatus; the borrowed
+# voices get a typewriter, older than the machine printing them.
+REEL_FACE = {
+    "RETURNED": "serif",
+    "WRONG": "type",
+}
+DEFAULT_FACE = "cg"
+
 BLACK_SECONDS = 4.0
 WRONG_GAP = 24          # cards between any two borrowed-voice cards
 SCREAM_GAP = 7          # cards between any two screams
@@ -97,6 +106,8 @@ def compose(target_s, seed):
 
     # payoff cards are placed by their setup, never drawn on their own
     payoffs = set(PAIRS.values())
+    face_of = {card_key(c): REEL_FACE.get(name, DEFAULT_FACE)
+               for name, cards in approved.APPROVED.items() for c in cards}
     reels = {
         name: Reel(name, [c for c in cards if card_key(c) not in payoffs], rng)
         for name, cards in approved.APPROVED.items()
@@ -145,7 +156,7 @@ def compose(target_s, seed):
             since_wrong += 1
             since_scream = 0 if payoff[1] == "scream" else since_scream + 1
 
-    return out, total
+    return out, total, face_of
 
 
 def main():
@@ -157,20 +168,23 @@ def main():
     ap.add_argument("--write", help="save the frozen order as JSON for rendering")
     args = ap.parse_args()
 
-    order, total = compose(args.minutes * 60.0, args.seed)
+    order, total, face_of = compose(args.minutes * 60.0, args.seed)
 
     if args.transcript:
         at = 0.0
         for i, card in enumerate(order, 1):
             mm, ss = divmod(at, 60)
             text = " / ".join(card[0]) if card[0] else "(black)"
-            print(f"{i:>4}  {int(mm):>2}:{ss:04.1f}  {card[1]:<9} {text}")
+            face = face_of.get(card_key(card), DEFAULT_FACE) if card[0] else "-"
+            print(f"{i:>4}  {int(mm):>2}:{ss:04.1f}  {card[1]:<9} {face:<6} {text}")
             at += card_seconds(card)
 
     if args.write:
         with open(args.write, "w") as f:
             json.dump({"seed": args.seed,
-                       "cards": [{"lines": c[0], "tone": c[1]} for c in order]},
+                       "cards": [{"lines": c[0], "tone": c[1],
+                                  "face": face_of.get(card_key(c), DEFAULT_FACE)}
+                                 for c in order]},
                       f, indent=1)
         print(f"wrote {args.write}")
 

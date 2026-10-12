@@ -40,6 +40,29 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FONT_CG = os.path.join(HERE, "fonts", "VT323.ttf")
 FONT_UI = os.path.join(HERE, "fonts", "ShareTechMono.ttf")
 
+# Three hands, so the tape can show who is speaking rather than only what is
+# said. scale is relative to the tone's size, since the faces do not match at
+# equal point size; track is letter spacing as a fraction of that size.
+FACES = {
+    "cg":    dict(file="VT323.ttf",        scale=1.00, track=0.06),
+    "serif": dict(file="EBGaramond.ttf",   scale=0.86, track=0.22),
+    "type":  dict(file="SpecialElite.ttf", scale=0.76, track=0.05),
+}
+
+
+def face_font(face, size):
+    spec = FACES.get(face, FACES["cg"])
+    px = max(14, int(round(size * spec["scale"])))
+    return ImageFont.truetype(os.path.join(HERE, "fonts", spec["file"]), px), spec["track"]
+
+
+def line_width(draw, text, font, track):
+    """Width including letter spacing, which textlength does not account for."""
+    if not text:
+        return 0.0
+    return (sum(draw.textlength(c, font=font) for c in text)
+            + track * font.size * (len(text) - 1))
+
 # hold:  multiplier on the reading-time estimate
 # floor: minimum seconds on screen
 # flash: seconds the frame between cards lasts
@@ -101,11 +124,17 @@ def finish(img):
 
 
 def chroma_text(draw_target, pos, lines, font, line_h, fill=(233, 236, 232),
-                centre=False):
+                centre=False, track=0.0):
     """Draw text three times to make the red/cyan fringe of a bad transfer."""
     layers = [((-3, 0), (255, 30, 80)), ((3, 0), (40, 255, 210)), ((0, 0), fill)]
     glow = Image.new("RGB", (W, H), (0, 0, 0))
     gd = ImageDraw.Draw(glow)
+    step = track * font.size
+
+    def run(d, x, y, text, colour):
+        for ch in text:
+            d.text((x, y), ch, font=font, fill=colour)
+            x += d.textlength(ch, font=font) + step
 
     for dx_dy, colour in layers:
         dx, dy = dx_dy
@@ -114,11 +143,10 @@ def chroma_text(draw_target, pos, lines, font, line_h, fill=(233, 236, 232),
         for i, line in enumerate(lines):
             x, y = pos[0] + dx, pos[1] + dy + i * line_h
             if centre:
-                bb = ld.textbbox((0, 0), line, font=font)
-                x = (W - (bb[2] - bb[0])) // 2 + dx
-            ld.text((x, y), line, font=font, fill=colour)
+                x = (W - line_width(ld, line, font, track)) / 2 + dx
+            run(ld, x, y, line, colour)
             if colour == fill:
-                gd.text((x, y), line, font=font, fill=colour)
+                run(gd, x, y, line, colour)
         draw_target.alpha_composite(layer.convert("RGBA"))
 
     glow = glow.filter(ImageFilter.GaussianBlur(5))
@@ -128,27 +156,27 @@ def chroma_text(draw_target, pos, lines, font, line_h, fill=(233, 236, 232),
     return Image.fromarray(out).convert("RGBA")
 
 
-def render_caption(lines, tone, centre=False):
+def render_caption(lines, tone, centre=False, face="cg"):
     size = TONES[tone]["size"]
     lines = [l.upper() for l in lines]
-    font = ImageFont.truetype(FONT_CG, size)
+    font, track = face_font(face, size)
     # no caption may run past the safe right edge; step the size down until it fits
     probe = ImageDraw.Draw(Image.new("RGB", (W, H)))
-    avail = W - int(W * 0.13) - 16
+    # the fringe sits 3px either side and the glow blurs past that, so the
+    # safe edge is further in than the glyphs alone suggest
+    avail = W - int(W * 0.13) - 34
     while size > 20:
-        widest = max(probe.textlength(l, font=font) for l in lines)
-        if widest <= avail:
+        if max(line_width(probe, l, font, track) for l in lines) <= avail:
             break
         size -= 2
-        font = ImageFont.truetype(FONT_CG, size)
-    line_h = int(size * 1.16)
+        font, track = face_font(face, size)
+    line_h = int(font.size * 1.16)
     img = Image.new("RGBA", (W, H), (6, 6, 8, 255))
     x = int(W * 0.13)
     y = int(H * 0.23)
     if centre:
-        total = line_h * len(lines)
-        y = (H - total) // 2
-    img = chroma_text(img, (x, y), lines, font, line_h, centre=centre)
+        y = (H - line_h * len(lines)) // 2
+    img = chroma_text(img, (x, y), lines, font, line_h, centre=centre, track=track)
     return finish(img)
 
 
@@ -518,7 +546,7 @@ def main():
             frozen = json.load(f)
         items = [
             dict(kind="black" if c["tone"] == "black" else "caption",
-                 lines=c["lines"], tone=c["tone"],
+                 lines=c["lines"], tone=c["tone"], face=c.get("face", "cg"),
                  **({"seconds": 4.0} if c["tone"] == "black" else {}))
             for c in frozen["cards"]
         ]
@@ -555,7 +583,7 @@ def main():
         elif it["kind"] == "clock":
             key = ("clock", it["time"], it["label"])
         else:
-            key = (it["kind"], tuple(it["lines"]), it["tone"])
+            key = (it["kind"], tuple(it["lines"]), it["tone"], it.get("face", "cg"))
         if key in cache:
             return cache[key]
         path = os.path.join(frames, f"c{len(cache):04d}.png")
@@ -564,9 +592,10 @@ def main():
         elif it["kind"] == "clock":
             img = render_clock(it["time"], it["label"])
         elif it["kind"] == "ident":
-            img = render_caption(it["lines"], "ident", centre=True)
+            img = render_caption(it["lines"], "ident", centre=True,
+                                 face=it.get("face", "cg"))
         else:
-            img = render_caption(it["lines"], it["tone"])
+            img = render_caption(it["lines"], it["tone"], face=it.get("face", "cg"))
         img.save(path)
         cache[key] = path
         return path
