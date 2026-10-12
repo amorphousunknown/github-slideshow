@@ -183,6 +183,12 @@ TONIGHT = [
      "Past tense and already finished. Nothing to do about it.", "med"),
     (["Do you know ghouls", "give out candy too"], "curt",
      "Reframes every door already knocked on tonight.", "low"),
+    (["Not all doors", "can be opened", "by the possessed"], "dread",
+     "Sounds like reassurance. Means some doors can, and does not say "
+     "which.", "low"),
+    (["Sleep well"], "curt",
+     "A sign-off. The author's joke is on well — the one in the film with "
+     "the thing climbing out of it — which is why the setup card matters.", "low"),
     (["Even the darkness", "is alive tonight"], "dread",
      "States the night's condition rather than threatening anyone.", "low"),
     (["Watch the shadows"], "scream",
@@ -202,6 +208,9 @@ FILE = [
      "Implies they have already been through this. Good on a loop.", "med"),
     (["One of them is", "ahead of you"], "dread",
      "Works without ever saying what 'them' is.", "high"),
+    (["Who let you out"], "dread",
+     "Three words that retroactively put the reader somewhere they were "
+     "being kept. Nothing else on the tape implies containment.", "med"),
     (["Are the lights on"], "question",
      "Three words that send people looking at their own windows.", "med"),
 ]
@@ -328,8 +337,6 @@ APPROVED = {
 # Held back pending the author's wording. The voice transcription was unclear
 # and these are not mine to guess at — see the questions put to them. Nothing
 # here renders.
-PENDING = [
-    "18    'How let you put?!'",
-    "80    'How old doors can be opened by the possessed'",
-    "101   'Well sleeping'",
-]
+# Nothing pending. Every ambiguity from the dictation has been settled by
+# the author.
+PENDING = []
