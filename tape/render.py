@@ -299,7 +299,7 @@ def render_bar():
 
 
 # ------------------------------------------------------------ the playlist
-def build_playlist(target_s, rng):
+def build_playlist(target_s, rng, clocks=False):
     """Walk the reels in order, shuffling within each, until the hour is full.
 
     Cards are consumed from shuffled copies of each reel, so a card cannot
@@ -337,15 +337,15 @@ def build_playlist(target_s, rng):
             total += dwell(lines, tone) + TONES[tone]["flash"]
 
             roll = rng.random()
-            if roll < 0.13:
+            if roll < 0.15:
                 lines = draw(sys_pool, content.SYSTEM)
                 items.append(dict(kind="caption", lines=lines, tone="glitch"))
                 total += dwell(lines, "glitch") + TONES["glitch"]["flash"]
-            elif roll < 0.18:
+            elif clocks and roll < 0.20:
                 t, label = draw(clock_pool, content.CLOCKS)
                 items.append(dict(kind="clock", time=t, label=label, tone="alarm"))
                 total += dwell([label], "alarm") + TONES["alarm"]["flash"]
-            elif roll < 0.23:
+            elif roll < 0.24:
                 d = round(float(rng.uniform(2.5, 6.0)), 2)
                 items.append(dict(kind="black", tone="black", seconds=d))
                 total += d
@@ -410,6 +410,8 @@ def main():
     ap.add_argument("--work", default="build")
     ap.add_argument("--crf", type=int, default=25)
     ap.add_argument("--keep", action="store_true", help="keep the frame cache")
+    ap.add_argument("--clocks", action="store_true",
+                    help="include the red seven-segment cards (off by default)")
     args = ap.parse_args()
 
     rng = np.random.default_rng(SEED)
@@ -422,7 +424,7 @@ def main():
     os.makedirs(frames, exist_ok=True)
 
     target = args.minutes * 60.0
-    items, est = build_playlist(target, rng)
+    items, est = build_playlist(target, rng, clocks=args.clocks)
     print(f"playlist: {len(items)} cards, {est/60:.1f} min")
 
     # one PNG per distinct card, reused wherever it recurs
