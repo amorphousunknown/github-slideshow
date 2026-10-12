@@ -48,7 +48,6 @@ PAIRS = {
     "Almost morning": "Not yet",
     "Ignore this if": "Sorry if you are",
     "I didnt have a better": "Thank you for",
-    "You arent dreaming": "You are dreaming",
 }
 
 

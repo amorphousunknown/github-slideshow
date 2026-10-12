@@ -174,6 +174,9 @@ TONIGHT = [
      "Charming and slightly wrong. Nothing else on the tape sounds like it.", "low"),
     (["Some tricks", "involve sorcery"], "curt",
      "Plays the night's own vocabulary straight.", "low"),
+    (["A knock at the door"], "dread",
+     "The author's own two-word horror story. Works at every door on "
+     "the street at once, and needs nothing after it.", "low"),
     (["Behind the door", "they wait"], "dread",
      "Works at every door on the street at once.", "low"),
     (["It is wearing", "a costume too"], "dread",
@@ -331,10 +334,11 @@ INSIDE = [
      "Conspiratorial. Assumes a secret the reader does not know they "
      "are keeping.", "low"),
     (["You arent dreaming"], "curt",
-     "Setup. Reads as reassurance for exactly as long as it takes to "
-     "read the next card.", "low"),
+     "Deliberately unpaired from the card below. The shuffle keeps them "
+     "minutes apart so the contradiction is something the reader "
+     "notices themselves, later.", "low"),
     (["You are dreaming"], "dread",
-     "Payoff. The contradiction arrives before the first has settled.", "med"),
+     "The other half, arriving long after the first is half forgotten.", "med"),
     (["(Screaming internally)"], "curt",
      "The joke version of every other card in this reel. Lands as relief, "
      "then as recognition.", "low"),
@@ -394,6 +398,4 @@ APPROVED = {
 # here renders.
 PENDING = [
     "'Who are the same way homeless normal or they will get lost' — cannot parse",
-    "'My horror story is Knock at the door' — is the card A KNOCK AT THE DOOR,"
-    " or was this framing rather than a card",
 ]
